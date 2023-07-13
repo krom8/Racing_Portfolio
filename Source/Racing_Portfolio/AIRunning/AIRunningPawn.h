@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "General/Rider.h"
 #include "AIRunningPawn.generated.h"
 
 UCLASS()
-class RACING_PORTFOLIO_API AAIRunningPawn : public APawn
+class RACING_PORTFOLIO_API AAIRunningPawn : public ARider
 {
 	GENERATED_BODY()
 

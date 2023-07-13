@@ -3,17 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "General/Rider.h"
-#include "PlayerRunningPawn.generated.h"
+#include "GameFramework/Pawn.h"
+#include "Rider.generated.h"
 
 UCLASS()
-class RACING_PORTFOLIO_API APlayerRunningPawn : public ARider
+class RACING_PORTFOLIO_API ARider : public APawn
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this pawn's properties
-	APlayerRunningPawn();
+	ARider();
 
 protected:
 	// Called when the game starts or when spawned
