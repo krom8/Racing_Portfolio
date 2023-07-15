@@ -5,26 +5,26 @@
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "UObject/NoExportTypes.h"
-#include "GameMeshData.generated.h"
+#include "GameSkeletalMeshData.generated.h"
 
 /**
  *
  */
 USTRUCT(BlueprintType)
-struct RACING_PORTFOLIO_API FGameMeshData : public FTableRowBase
+struct RACING_PORTFOLIO_API FGameSkeletalMeshData : public FTableRowBase
 {
 
 	GENERATED_BODY()
 
-	FGameMeshData()
+	FGameSkeletalMeshData()
 	{
 	};
 
-	~FGameMeshData()
+	~FGameSkeletalMeshData()
 	{
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
-	UStaticMesh* Mesh;
+	USkeletalMesh* Mesh;
 
 };
