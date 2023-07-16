@@ -15,9 +15,22 @@ public:
 	// Sets default values for this pawn's properties
 	ARider();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UCapsuleComponent* CapsuleComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class USkeletalMeshComponent* SkeletalMeshComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UCameraComponent* CameraComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class USpringArmComponent* SpringArmComp;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
 
 public:	
 	// Called every frame
@@ -25,5 +38,8 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+
+
 
 };

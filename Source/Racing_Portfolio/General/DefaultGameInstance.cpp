@@ -2,7 +2,7 @@
 
 
 #include "General/DefaultGameInstance.h"
-
+#include "General/GameSkeletalMeshData.h"
 
 UDefaultGameInstance::UDefaultGameInstance()
 {
@@ -13,3 +13,4 @@ UDefaultGameInstance::~UDefaultGameInstance()
 {
 
 }
+

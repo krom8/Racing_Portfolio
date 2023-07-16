@@ -14,10 +14,9 @@ UCLASS()
 class RACING_PORTFOLIO_API UDefaultGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
+
 public:
 	UDefaultGameInstance();
 
 	~UDefaultGameInstance();
-	TArray<UStaticMesh*> Arrmesh;
-	
 };
