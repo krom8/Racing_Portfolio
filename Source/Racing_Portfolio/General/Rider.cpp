@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/PlayerInput.h"
 
 
 // Sets default values
@@ -13,7 +14,6 @@ ARider::ARider()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 
 	CapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCylinder"));
 	RootComponent = CapsuleComp;
@@ -63,5 +63,35 @@ void ARider::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveForward", EKeys::W, 1.f));
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveBack", EKeys::S, 1.f));
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("TurnLeft", EKeys::A, 1.f));
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("TurnRight", EKeys::D, 1.f));
+
+	PlayerInputComponent->BindAxis("MoveForward", this, &ARider::MoveForward);
+	PlayerInputComponent->BindAxis("TurnRight", this, &ARider::TurnRight);
+	PlayerInputComponent->BindAxis("TurnLeft", this, &ARider::TurnLeft);
+	PlayerInputComponent->BindAxis("MoveBack", this, &ARider::MoveBack);
+
 }
 
+
+void ARider::MoveForward(float Val)
+{
+
+}
+
+void ARider::MoveBack(float Val)
+{
+
+}
+
+void ARider::TurnLeft(float Val)
+{
+
+}
+
+void ARider::TurnRight(float Val)
+{
+
+}
