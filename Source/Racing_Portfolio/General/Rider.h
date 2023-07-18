@@ -27,6 +27,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class USpringArmComponent* SpringArmComp;
 
+
+	class Wheel* FrontLeftWheel;
+
+	class Wheel* FrontRightWheel;
+
+	class Wheel* RearLeftWheel;
+
+	class Wheel* RearRightWheel;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -47,5 +56,7 @@ public:
 
 	void TurnRight(float Val);
 
+	void Drift(float Val);
 
+	void Boost(float Val);
 };

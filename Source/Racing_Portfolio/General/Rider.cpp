@@ -7,7 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PlayerInput.h"
-
+#include "Wheel.h"
 
 // Sets default values
 ARider::ARider()
@@ -30,7 +30,7 @@ ARider::ARider()
 	USkeletalMesh* DefaultCar = SkeletalMeshLoader.Object;
 	SkeletalMeshComp->SetSkeletalMesh(DefaultCar);
 
-	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("kwSpringArm"));
 	SpringArmComp->SetupAttachment(RootComponent);
 	SpringArmComp->SetRelativeLocation(FVector(-400.f, 0.f, 300.f));
 
@@ -67,18 +67,23 @@ void ARider::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveBack", EKeys::S, 1.f));
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("TurnLeft", EKeys::A, 1.f));
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("TurnRight", EKeys::D, 1.f));
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("Drift", EKeys::LeftShift, 1.f));
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("Drift", EKeys::RightShift, 1.f));
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("Boost", EKeys::SpaceBar, 1.f));
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ARider::MoveForward);
 	PlayerInputComponent->BindAxis("TurnRight", this, &ARider::TurnRight);
 	PlayerInputComponent->BindAxis("TurnLeft", this, &ARider::TurnLeft);
 	PlayerInputComponent->BindAxis("MoveBack", this, &ARider::MoveBack);
+	PlayerInputComponent->BindAxis("Drift", this, &ARider::Drift);
+	PlayerInputComponent->BindAxis("Boost", this, &ARider::Boost);
 
 }
 
 
 void ARider::MoveForward(float Val)
 {
-
+	UE_LOG(LogTemp, Display, TEXT("hihihi"));
 }
 
 void ARider::MoveBack(float Val)
@@ -92,6 +97,16 @@ void ARider::TurnLeft(float Val)
 }
 
 void ARider::TurnRight(float Val)
+{
+
+}
+
+void ARider::Drift(float Val)
+{
+
+}
+
+void ARider::Boost(float Val)
 {
 
 }
