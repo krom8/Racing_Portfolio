@@ -7,15 +7,18 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PlayerInput.h"
-#include "Wheel.h"
+#include "General/RiderMovementComponent.h"
+
+
 
 // Sets default values
 ARider::ARider()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	CapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCylinder"));
+	CapsuleComp->SetCapsuleSize(100.f, 50.f);
 	RootComponent = CapsuleComp;
 
 	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
@@ -30,14 +33,21 @@ ARider::ARider()
 	USkeletalMesh* DefaultCar = SkeletalMeshLoader.Object;
 	SkeletalMeshComp->SetSkeletalMesh(DefaultCar);
 
-	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("kwSpringArm"));
+	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArmComp->SetupAttachment(RootComponent);
 	SpringArmComp->SetRelativeLocation(FVector(-400.f, 0.f, 300.f));
 
-
-
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetupAttachment(SpringArmComp);
+
+	MoveComp = CreateDefaultSubobject<URiderMovementComponent>(TEXT("RiderMove"));
+	MoveComp->UpdatedComponent = RootComponent;
+
+
+	int a = 0;
+
+
+
 
 }
 
@@ -56,6 +66,7 @@ void ARider::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
 }
 
 // Called to bind functionality to input
@@ -69,35 +80,62 @@ void ARider::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("TurnRight", EKeys::D, 1.f));
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("Drift", EKeys::LeftShift, 1.f));
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("Drift", EKeys::RightShift, 1.f));
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("Boost", EKeys::SpaceBar, 1.f));
+	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("Boost", EKeys::SpaceBar));
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ARider::MoveForward);
 	PlayerInputComponent->BindAxis("TurnRight", this, &ARider::TurnRight);
 	PlayerInputComponent->BindAxis("TurnLeft", this, &ARider::TurnLeft);
 	PlayerInputComponent->BindAxis("MoveBack", this, &ARider::MoveBack);
 	PlayerInputComponent->BindAxis("Drift", this, &ARider::Drift);
-	PlayerInputComponent->BindAxis("Boost", this, &ARider::Boost);
+	PlayerInputComponent->BindAction("Boost", IE_Pressed, this, &ARider::Boost);
 
 }
 
 
 void ARider::MoveForward(float Val)
 {
-	UE_LOG(LogTemp, Display, TEXT("hihihi"));
+	if (Val != 0.f)
+	{
+		FRotator const ControlSpaceRot = Controller->GetControlRotation();
+		AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::X), Val);
+	}
 }
 
 void ARider::MoveBack(float Val)
 {
-
+	if (Val != 0.f)
+	{
+		FRotator const ControlSpaceRot = Controller->GetControlRotation();
+		AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::X), -Val);
+	}
 }
-
+ 
 void ARider::TurnLeft(float Val)
 {
+	double YawInput = -Val * BaseTurnRate * GetWorld()->GetDeltaSeconds() * CustomTimeDilation;
+	if (Val != 0.f)
+	{
+		AddControllerYawInput(YawInput);
+		FRotator ControllerRot = GetController()->GetControlRotation();
+		SetActorRotation(ControllerRot);
+	}
 
 }
 
 void ARider::TurnRight(float Val)
 {
+	double YawInput = Val * BaseTurnRate * GetWorld()->GetDeltaSeconds() * CustomTimeDilation;
+	if (Val != 0.f)
+	{
+		AddControllerYawInput(YawInput);
+		FRotator ControllerRot = GetController()->GetControlRotation();
+		SetActorRotation(ControllerRot);
+	}
+
+	FRotator Check = GetActorRotation();
+	FRotator Check2 = GetController()->GetControlRotation();
+	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, FString::Printf(TEXT("ActorYaw%f"), Check.Yaw));
+	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, FString::Printf(TEXT("ContorllerYaw%f"), Check2.Yaw));
 
 }
 
@@ -106,7 +144,8 @@ void ARider::Drift(float Val)
 
 }
 
-void ARider::Boost(float Val)
+void ARider::Boost()
 {
 
 }
+

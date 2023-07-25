@@ -16,32 +16,32 @@ public:
 	ARider();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UCapsuleComponent* CapsuleComp;
+		class UCapsuleComponent* CapsuleComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class USkeletalMeshComponent* SkeletalMeshComp;
+		class USkeletalMeshComponent* SkeletalMeshComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UCameraComponent* CameraComp;
+		class UCameraComponent* CameraComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class USpringArmComponent* SpringArmComp;
+		class USpringArmComponent* SpringArmComp;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class URiderMovementComponent* MoveComp;
 
-	class Wheel* FrontLeftWheel;
-
-	class Wheel* FrontRightWheel;
-
-	class Wheel* RearLeftWheel;
-
-	class Wheel* RearRightWheel;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BaseTurnRate = 45.f;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+private:
 
-public:	
+	int Speed = 0;
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -58,5 +58,6 @@ public:
 
 	void Drift(float Val);
 
-	void Boost(float Val);
+	void Boost();
 };
+

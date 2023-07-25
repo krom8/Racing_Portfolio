@@ -41,6 +41,10 @@
 		{
 			"Name": "LearningAgents",
 			"Enabled": true
+		},
+		{
+			"Name": "ChaosVehiclesPlugin",
+			"Enabled": true
 		}
 	]
 }

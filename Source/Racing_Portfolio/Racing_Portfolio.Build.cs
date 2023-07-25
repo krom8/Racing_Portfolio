@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
+using UnrealBuildTool.Rules;
 
 public class Racing_Portfolio : ModuleRules
 {
@@ -10,7 +11,7 @@ public class Racing_Portfolio : ModuleRules
 		PublicIncludePaths.Add(ModuleDirectory);
 		PrivateIncludePaths.Add(ModuleDirectory);
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "ChaosVehicles" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
