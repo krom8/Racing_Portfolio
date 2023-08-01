@@ -16,10 +16,16 @@ class RACING_PORTFOLIO_API URiderMovementComponent : public UPawnMovementCompone
 
 public:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxSpeed = 1000.f;
+	float MaxSpeed = 3000.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AccelSpeed = 10.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DecreaseSpeed = 20.f;
 
 private:
-	float CurSpeed = 0;
+	float CurSpeed = 0.f;
+	FVector CurRot = { 1.f, 0.f, 0.f };
+	FVector CurVector;
+	FVector CurInput;
 };

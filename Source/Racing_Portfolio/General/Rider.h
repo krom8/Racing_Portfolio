@@ -31,7 +31,7 @@ public:
 		class URiderMovementComponent* MoveComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BaseTurnRate = 45.f;
+		float BaseTurnRate = 45.f;
 
 protected:
 	// Called when the game starts or when spawned
@@ -56,7 +56,9 @@ public:
 
 	void TurnRight(float Val);
 
-	void Drift(float Val);
+	void DriftStart();
+
+	void DriftEnd();
 
 	void Boost();
 };
