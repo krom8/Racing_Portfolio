@@ -22,10 +22,18 @@ public:
 	float AccelSpeed = 10.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DecreaseSpeed = 20.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float IncreaseSpeed = 20.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BackwardSpeed = 10.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BreakSpeed = 40.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BackwardMaxSpeed = 1000.f;
 
 private:
 	float CurSpeed = 0.f;
-	FVector CurRot = { 1.f, 0.f, 0.f };
+	FVector CurPawnRotVector = { 1.f, 0.f, 0.f };
 	FVector CurVector;
-	FVector CurInput;
+
 };

@@ -44,8 +44,6 @@ ARider::ARider()
 	MoveComp->UpdatedComponent = RootComponent;
 
 
-	int a = 0;
-
 
 
 
