@@ -72,7 +72,7 @@ void ARider::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveBack", EKeys::S, 1.f));
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("TurnLeft", EKeys::A, 1.f));
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("TurnRight", EKeys::D, 1.f));
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("Drift", EKeys::LeftShift, 1.f));
+	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("Drift", EKeys::LeftShift));
 	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("Drift", EKeys::RightShift));
 	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("Boost", EKeys::SpaceBar));
 
@@ -91,8 +91,11 @@ void ARider::MoveForward(float Val)
 {
 	if (Val != 0.f)
 	{
-		FRotator const ControlSpaceRot = Controller->GetControlRotation();
-		AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::X), Val);
+		ForwardPressed = true;
+	}
+	else
+	{
+		ForwardPressed = false;
 	}
 }
 
@@ -100,47 +103,54 @@ void ARider::MoveBack(float Val)
 {
 	if (Val != 0.f)
 	{
-		FRotator const ControlSpaceRot = Controller->GetControlRotation();
-		AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::X), -Val);
+		BackwardPressed = true;
+	}
+	else
+	{
+		BackwardPressed = false;
 	}
 }
  
 void ARider::TurnLeft(float Val)
 {
-	double YawInput = -Val * BaseTurnRate * GetWorld()->GetDeltaSeconds() * CustomTimeDilation;
 	if (Val != 0.f)
 	{
-		FRotator ControllerRot = GetController()->GetControlRotation();
-		ControllerRot = ControllerRot.Add(0, YawInput, 0);
-		AddMovementInput(FRotationMatrix(ControllerRot).GetScaledAxis(EAxis::X), Val);
+		LeftPressed = true;
+	}
+	else
+	{
+		LeftPressed = false;
 	}
 
 }
 
 void ARider::TurnRight(float Val)
 {
-	double YawInput = Val * BaseTurnRate * GetWorld()->GetDeltaSeconds() * CustomTimeDilation;
 	if (Val != 0.f)
 	{
-		FRotator ControllerRot = GetController()->GetControlRotation();
-		ControllerRot = ControllerRot.Add(0, YawInput, 0);
-		AddMovementInput(FRotationMatrix(ControllerRot).GetScaledAxis(EAxis::X), Val);
+		RightPressed = true;
 	}
+	else
+	{
+		RightPressed = false;
+	}
+
 
 }
 
 void ARider::DriftStart()
 {
-
+	DriftStartPressed = true;
 }
 
 void ARider::DriftEnd()
 {
-
+	DriftStartPressed = false;
+	DriftEndPressed = true;
 }
 
 void ARider::Boost()
 {
-
+	BoostPressed = true;
 }
 

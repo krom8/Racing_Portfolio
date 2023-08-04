@@ -33,13 +33,43 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float BaseTurnRate = 45.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float MaxSpeed = 3000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float AccelSpeed = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float DecreaseSpeed = 20.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float IncreaseSpeed = 20.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float TurnDecreaseSpeed = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float BackwardSpeed = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float BreakSpeed = 40.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float BackwardMaxSpeed = 1000.f;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
-
-	int Speed = 0;
+	friend class URiderMovementComponent;
+	bool ForwardPressed = false;
+	bool BackwardPressed = false;
+	bool RightPressed = false;
+	bool LeftPressed = false;
+	bool DriftStartPressed = false;
+	bool DriftEndPressed = false;
+	bool BoostPressed = false;
 
 public:
 	// Called every frame
