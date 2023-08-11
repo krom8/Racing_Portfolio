@@ -2,36 +2,31 @@
 
 
 #include "Rider.h"
-#include "DefaultGameInstance.h"
-#include "Components/CapsuleComponent.h"
+#include "ChaosVehicleMovementComponent.h"
+#include "ChaosWheeledVehicleMovementComponent.h"
+#include "FrontWheel.h"
+#include "RearWheel.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PlayerInput.h"
-#include "General/RiderMovementComponent.h"
+#include "DefaultGameInstance.h"
+#include "Curves/CurveFloat.h"
+#include "General/CarData.h"
 
 
-
-// Sets default values
 ARider::ARider()
 {
-	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	CapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCylinder"));
-	CapsuleComp->SetCapsuleSize(100.f, 50.f);
-	RootComponent = CapsuleComp;
-
-	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
-	SkeletalMeshComp->SetupAttachment(RootComponent);
-
-	FString DataPath = TEXT("/Script/Engine.SkeletalMesh'/Game/Content_General/AssetsvilleTown/Meshes/Vehicles/SK_veh_SportClassic_01.SK_veh_SportClassic_01'");
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SkeletalMeshLoader(*DataPath);
-	if (SkeletalMeshLoader.Succeeded() == false)
+	FName CarName = TEXT("DefaultCar");
+	FString DataTablePath = TEXT("/Script/Engine.DataTable'/Game/BP_General/CarDataTable.CarDataTable'");
+	ConstructorHelpers::FObjectFinder<UDataTable> DataTable(*DataTablePath);
+	if (DataTable.Succeeded() == false)
 	{
 		return;
 	}
-	USkeletalMesh* DefaultCar = SkeletalMeshLoader.Object;
-	SkeletalMeshComp->SetSkeletalMesh(DefaultCar);
+	UDataTable* Datas = DataTable.Object;
+	FCarData* AllCarData = Datas->FindRow<FCarData>(CarName, CarName.ToString());
 
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArmComp->SetupAttachment(RootComponent);
@@ -40,117 +35,112 @@ ARider::ARider()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
-	MoveComp = CreateDefaultSubobject<URiderMovementComponent>(TEXT("RiderMove"));
-	MoveComp->UpdatedComponent = RootComponent;
+	USkeletalMesh* DefaultCar = AllCarData->Mesh;
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	MeshComp->SetSkeletalMesh(DefaultCar);
+	MeshComp->SetSimulatePhysics(true);
 
+	UChaosWheeledVehicleMovementComponent* WheeledMovementComponent = Cast<UChaosWheeledVehicleMovementComponent>(GetMovementComponent());
+	FChaosWheelSetup FLWheelSetup;
+	FLWheelSetup.WheelClass = UFrontWheel::StaticClass();
+	FLWheelSetup.BoneName = AllCarData->FrontLeftWheel;
+	WheeledMovementComponent->WheelSetups.Add(FLWheelSetup);
 
+	FChaosWheelSetup FRWheelSetup;
+	FRWheelSetup.WheelClass = UFrontWheel::StaticClass();
+	FRWheelSetup.BoneName = AllCarData->FrontRightWheel;
+	WheeledMovementComponent->WheelSetups.Add(FRWheelSetup);
 
+	FChaosWheelSetup RLWheelSetup;
+	RLWheelSetup.WheelClass = URearWheel::StaticClass();
+	RLWheelSetup.BoneName = AllCarData->RearLeftWheel;
+	WheeledMovementComponent->WheelSetups.Add(RLWheelSetup);
 
+	FChaosWheelSetup RRWheelSetup;
+	RRWheelSetup.WheelClass = URearWheel::StaticClass();
+	RRWheelSetup.BoneName = AllCarData->RearRightWheel;
+	WheeledMovementComponent->WheelSetups.Add(RRWheelSetup);
 
+	UCurveFloat* CurveData = AllCarData->TorqueCurve;
+	WheeledMovementComponent->EngineSetup.TorqueCurve.ExternalCurve = CurveData;
+
+	WheeledMovementComponent->bReverseAsBrake = true;
 }
 
-// Called when the game starts or when spawned
+
 void ARider::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-// Called every frame
 void ARider::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-
 }
 
-// Called to bind functionality to input
+
 void ARider::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveForward", EKeys::W, 1.f));
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveBack", EKeys::S, 1.f));
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("TurnLeft", EKeys::A, 1.f));
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("TurnRight", EKeys::D, 1.f));
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveBackward", EKeys::S, 1.f));
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("Turn", EKeys::A, -1.f));
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("Turn", EKeys::D, 1.f));
 	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("Drift", EKeys::LeftShift));
 	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("Drift", EKeys::RightShift));
 	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("Boost", EKeys::SpaceBar));
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ARider::MoveForward);
-	PlayerInputComponent->BindAxis("TurnRight", this, &ARider::TurnRight);
-	PlayerInputComponent->BindAxis("TurnLeft", this, &ARider::TurnLeft);
-	PlayerInputComponent->BindAxis("MoveBack", this, &ARider::MoveBack);
-	PlayerInputComponent->BindAction("Drift", IE_Pressed, this, &ARider::DriftStart);
-	PlayerInputComponent->BindAction("Drift", IE_Released, this, &ARider::DriftEnd);
+	PlayerInputComponent->BindAxis("MoveBackward", this, &ARider::MoveBackward);
+	PlayerInputComponent->BindAxis("Turn", this, &ARider::Turn);
+	PlayerInputComponent->BindAction("DriftOn", IE_Pressed, this, &ARider::DriftOn);
+	PlayerInputComponent->BindAction("DriftOff", IE_Released, this, &ARider::DriftOff);
 	PlayerInputComponent->BindAction("Boost", IE_Pressed, this, &ARider::Boost);
+}
 
+void ARider::MoveForward(float Value)
+{
+	GetVehicleMovementComponent()->SetThrottleInput(Value);
+}
+
+void ARider::MoveBackward(float Value)
+{
+	GetVehicleMovementComponent()->SetBrakeInput(Value);
 }
 
 
-void ARider::MoveForward(float Val)
+void ARider::Turn(float Value)
 {
-	if (Val != 0.f)
-	{
-		ForwardPressed = true;
-	}
-	else
-	{
-		ForwardPressed = false;
-	}
+	GetVehicleMovementComponent()->SetSteeringInput(Value);
 }
 
-void ARider::MoveBack(float Val)
+void ARider::DriftOn()
 {
-	if (Val != 0.f)
-	{
-		BackwardPressed = true;
-	}
-	else
-	{
-		BackwardPressed = false;
-	}
-}
- 
-void ARider::TurnLeft(float Val)
-{
-	if (Val != 0.f)
-	{
-		LeftPressed = true;
-	}
-	else
-	{
-		LeftPressed = false;
-	}
-
+	GetVehicleMovementComponent()->SetHandbrakeInput(true);
 }
 
-void ARider::TurnRight(float Val)
+void ARider::DriftOff()
 {
-	if (Val != 0.f)
-	{
-		RightPressed = true;
-	}
-	else
-	{
-		RightPressed = false;
-	}
-
-
-}
-
-void ARider::DriftStart()
-{
-	DriftStartPressed = true;
-}
-
-void ARider::DriftEnd()
-{
-	DriftStartPressed = false;
-	DriftEndPressed = true;
+	GetVehicleMovementComponent()->SetHandbrakeInput(false);
 }
 
 void ARider::Boost()
 {
-	BoostPressed = true;
+	FName CarName = TEXT("DefaultCar");
+	FString DataTablePath = TEXT("/Script/Engine.DataTable'/Game/BP_General/CarDataTable.CarDataTable'");
+	ConstructorHelpers::FObjectFinder<UDataTable> DataTable(*DataTablePath);
+	if (DataTable.Succeeded() == false)
+	{
+		return;
+	}
+	UDataTable* Datas = DataTable.Object;
+	FCarData* AllCarData = Datas->FindRow<FCarData>(CarName, CarName.ToString());
+	UCurveFloat* CurveData = AllCarData->MaxTorqueCurve;
+	UChaosWheeledVehicleMovementComponent* WheeledMovementComponent = Cast<UChaosWheeledVehicleMovementComponent>(GetMovementComponent());
+	WheeledMovementComponent->EngineSetup.TorqueCurve.ExternalCurve = CurveData;
+	//USkeletalMeshComponent* MeshComp = GetMesh();
+	//FVector LinearVelocity = MeshComp->GetPhysicsLinearVelocity();
+	//MeshComp->SetPhysicsLinearVelocity(1.5*LinearVelocity);
 }
-

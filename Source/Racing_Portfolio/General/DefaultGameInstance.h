@@ -19,4 +19,8 @@ public:
 	UDefaultGameInstance();
 
 	~UDefaultGameInstance();
+
+	UPROPERTY()
+		UDataTable* CarDatas;
+
 };

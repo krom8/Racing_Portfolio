@@ -3,73 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "WheeledVehiclePawn.h"
 #include "Rider.generated.h"
 
+/**
+ *
+ */
 UCLASS()
-class RACING_PORTFOLIO_API ARider : public APawn
+class RACING_PORTFOLIO_API ARider : public AWheeledVehiclePawn
 {
 	GENERATED_BODY()
 
+
 public:
-	// Sets default values for this pawn's properties
+	// Sets default values for this character's properties
 	ARider();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		class UCapsuleComponent* CapsuleComp;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		class USkeletalMeshComponent* SkeletalMeshComp;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		class UCameraComponent* CameraComp;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		class USpringArmComponent* SpringArmComp;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		class URiderMovementComponent* MoveComp;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float BaseTurnRate = 45.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float MaxSpeed = 3000.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float AccelSpeed = 10.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float DecreaseSpeed = 20.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float IncreaseSpeed = 20.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float TurnDecreaseSpeed = 10.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float BackwardSpeed = 10.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float BreakSpeed = 40.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float BackwardMaxSpeed = 1000.f;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-private:
-	friend class URiderMovementComponent;
-	bool ForwardPressed = false;
-	bool BackwardPressed = false;
-	bool RightPressed = false;
-	bool LeftPressed = false;
-	bool DriftStartPressed = false;
-	bool DriftEndPressed = false;
-	bool BoostPressed = false;
 
 public:
 	// Called every frame
@@ -78,18 +30,28 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void MoveForward(float Val);
+	UFUNCTION(BlueprintCallable)
+		void MoveForward(float Value);
 
-	void MoveBack(float Val);
+	UFUNCTION(BlueprintCallable)
+		void MoveBackward(float Value);
 
-	void TurnLeft(float Val);
+	UFUNCTION(BlueprintCallable)
+		void Turn(float Value);
 
-	void TurnRight(float Val);
+	UFUNCTION(BlueprintCallable)
+		void DriftOn();
 
-	void DriftStart();
+	UFUNCTION(BlueprintCallable)
+		void DriftOff();
 
-	void DriftEnd();
+	UFUNCTION(BlueprintCallable)
+		void Boost();
 
-	void Boost();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UCameraComponent* CameraComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class USpringArmComponent* SpringArmComp;
+	
 };
-
