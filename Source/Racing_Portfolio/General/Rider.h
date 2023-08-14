@@ -48,10 +48,26 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void Boost();
 
+	UFUNCTION(BlueprintCallable)
+		void BoostOff();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class UCameraComponent* CameraComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class USpringArmComponent* SpringArmComp;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UPhysicsThrusterComponent* BoosterComp1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UPhysicsThrusterComponent* BoosterComp2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float MaxBoostTime = 2.f;
+
+private:
+
+	bool CanBoost = true;
+	FTimerHandle BoostTimerHandle;
 };

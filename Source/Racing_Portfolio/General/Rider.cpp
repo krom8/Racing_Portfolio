@@ -12,6 +12,7 @@
 #include "DefaultGameInstance.h"
 #include "Curves/CurveFloat.h"
 #include "General/CarData.h"
+#include "PhysicsEngine/PhysicsThrusterComponent.h"
 
 
 ARider::ARider()
@@ -28,17 +29,16 @@ ARider::ARider()
 	UDataTable* Datas = DataTable.Object;
 	FCarData* AllCarData = Datas->FindRow<FCarData>(CarName, CarName.ToString());
 
+	USkeletalMesh* DefaultCar = AllCarData->Mesh;
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	MeshComp->SetSkeletalMesh(DefaultCar);
+
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArmComp->SetupAttachment(RootComponent);
 	SpringArmComp->SetRelativeLocation(FVector(-400.f, 0.f, 300.f));
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetupAttachment(SpringArmComp);
-
-	USkeletalMesh* DefaultCar = AllCarData->Mesh;
-	USkeletalMeshComponent* MeshComp = GetMesh();
-	MeshComp->SetSkeletalMesh(DefaultCar);
-	MeshComp->SetSimulatePhysics(true);
 
 	UChaosWheeledVehicleMovementComponent* WheeledMovementComponent = Cast<UChaosWheeledVehicleMovementComponent>(GetMovementComponent());
 	FChaosWheelSetup FLWheelSetup;
@@ -64,7 +64,22 @@ ARider::ARider()
 	UCurveFloat* CurveData = AllCarData->TorqueCurve;
 	WheeledMovementComponent->EngineSetup.TorqueCurve.ExternalCurve = CurveData;
 
-	WheeledMovementComponent->bReverseAsBrake = true;
+	BoosterComp1 = CreateDefaultSubobject<UPhysicsThrusterComponent>(TEXT("Booster1"));
+	BoosterComp1->SetupAttachment(RootComponent);
+	FTransform BoosterTransform1 = { FRotator(0.f, 0.f, 180.f), FVector(-230.f, -65.f, 40.f), FVector(1, 1, 1) };
+	BoosterComp1->SetRelativeTransform(BoosterTransform1);
+	BoosterComp1->ThrustStrength = 1000000.f;
+	//BoosterComp1->SetActorRelativeLocation({-230.f, -65.f, 40.f});
+
+
+	BoosterComp2 = CreateDefaultSubobject<UPhysicsThrusterComponent>(TEXT("Booster2"));
+	BoosterComp2->SetupAttachment(RootComponent);
+	FTransform BoosterTransform2 = FTransform(FRotator(0.f, 0.f, 180.f), FVector(-230.f, 65.f, 40.f), FVector(1, 1, 1));
+	BoosterComp2->SetRelativeTransform(BoosterTransform2);
+	BoosterComp1->ThrustStrength = 1000000.f;
+	//BoosterComp2->SetActorRelativeLocation({ 0.f, 130.f, 0.f });
+
+	MeshComp->SetSimulatePhysics(true);
 }
 
 
@@ -76,7 +91,6 @@ void ARider::BeginPlay()
 void ARider::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 
@@ -128,19 +142,21 @@ void ARider::DriftOff()
 
 void ARider::Boost()
 {
-	FName CarName = TEXT("DefaultCar");
-	FString DataTablePath = TEXT("/Script/Engine.DataTable'/Game/BP_General/CarDataTable.CarDataTable'");
-	ConstructorHelpers::FObjectFinder<UDataTable> DataTable(*DataTablePath);
-	if (DataTable.Succeeded() == false)
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%d"), CanBoost));
+	if (CanBoost)
 	{
-		return;
+		CanBoost = false;
+		BoosterComp1->Activate();
+		BoosterComp2->Activate();
+		GetWorld()->GetTimerManager().SetTimer(BoostTimerHandle, this, &ARider::BoostOff, MaxBoostTime, false);
 	}
-	UDataTable* Datas = DataTable.Object;
-	FCarData* AllCarData = Datas->FindRow<FCarData>(CarName, CarName.ToString());
-	UCurveFloat* CurveData = AllCarData->MaxTorqueCurve;
-	UChaosWheeledVehicleMovementComponent* WheeledMovementComponent = Cast<UChaosWheeledVehicleMovementComponent>(GetMovementComponent());
-	WheeledMovementComponent->EngineSetup.TorqueCurve.ExternalCurve = CurveData;
-	//USkeletalMeshComponent* MeshComp = GetMesh();
-	//FVector LinearVelocity = MeshComp->GetPhysicsLinearVelocity();
-	//MeshComp->SetPhysicsLinearVelocity(1.5*LinearVelocity);
+	
+}
+
+void ARider::BoostOff()
+{
+	BoosterComp1->Deactivate();
+	BoosterComp2->Deactivate();
+	CanBoost = true;
+	GetWorld()->GetTimerManager().ClearTimer(BoostTimerHandle);
 }
