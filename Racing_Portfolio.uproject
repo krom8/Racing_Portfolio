@@ -24,6 +24,27 @@
 			]
 		},
 		{
+			"Name": "LearningAgents",
+			"Enabled": true
+		},
+		{
+			"Name": "ChaosVehiclesPlugin",
+			"Enabled": true
+		},
+		{
+			"Name": "OpenCV",
+			"Enabled": true
+		},
+		{
+			"Name": "NNERuntimeORTCpu",
+			"Enabled": true,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
 			"Name": "NNE",
 			"Enabled": true,
 			"SupportedTargetPlatforms": [
@@ -40,12 +61,13 @@
 			]
 		},
 		{
-			"Name": "LearningAgents",
-			"Enabled": true
-		},
-		{
-			"Name": "ChaosVehiclesPlugin",
-			"Enabled": true
+			"Name": "NNERuntimeRDG",
+			"Enabled": true,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
 		}
 	]
 }

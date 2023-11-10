@@ -1,19 +1,40 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+using System.IO;
 using UnrealBuildTool;
-using UnrealBuildTool.Rules;
+
 
 public class Racing_Portfolio : ModuleRules
 {
 	public Racing_Portfolio(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
 		PublicIncludePaths.Add(ModuleDirectory);
 		PrivateIncludePaths.Add(ModuleDirectory);
-	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "ChaosVehicles"});
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
+        PrivateIncludePaths.AddRange(new string[] { Path.Combine(EngineDirectory, "Source/Runtime/Renderer/Private") });
+        PublicDependencyModuleNames.AddRange(new string[] { 
+			"Core", 
+			"CoreUObject", 
+			"Engine", 
+			"InputCore", 
+			"ChaosVehicles",
+			// Rendering dependencies
+            "Renderer",
+            "RenderCore",
+            "RHI",
+            "RHICore",
+            "D3D12RHI",
+            // OpenCV dependencies
+            "OpenCV",
+            "OpenCVHelper",
+			"NNE",
+        });
+
+		PrivateDependencyModuleNames.AddRange(new string[] {
+        });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
