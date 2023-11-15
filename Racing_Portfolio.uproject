@@ -7,7 +7,7 @@
 		{
 			"Name": "Racing_Portfolio",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
+			"LoadingPhase": "PostEngineInit",
 			"AdditionalDependencies": [
 				"Engine",
 				"CoreUObject",
