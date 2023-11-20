@@ -53,41 +53,6 @@ FRealtimeStyleTransferViewExtension::FRealtimeStyleTransferViewExtension(const F
 			if (Model.IsValid())
 			{
 				ModelHelper->ModelInstance = Model->CreateModelInstance();
-				if (ModelHelper->ModelInstance.IsValid())
-				{
-					ModelHelper->bIsRunning = false;
-
-					// Example for querying and testing in- and outputs
-					TConstArrayView<UE::NNE::FTensorDesc> InputTensorDescs = ModelHelper->ModelInstance->GetInputTensorDescs();
-					checkf(InputTensorDescs.Num() == 1, TEXT("The current example supports only models with a single input tensor"));
-					UE::NNE::FSymbolicTensorShape SymbolicInputTensorShape = InputTensorDescs[0].GetShape();
-					checkf(SymbolicInputTensorShape.IsConcrete(), TEXT("The current example supports only models without variable input tensor dimensions"));
-					TArray<UE::NNE::FTensorShape> InputTensorShapes = { UE::NNE::FTensorShape::MakeFromSymbolic(SymbolicInputTensorShape) };
-
-					ModelHelper->ModelInstance->SetInputTensorShapes(InputTensorShapes);
-
-					TConstArrayView<UE::NNE::FTensorDesc> OutputTensorDescs = ModelHelper->ModelInstance->GetOutputTensorDescs();
-					checkf(OutputTensorDescs.Num() == 1, TEXT("The current example supports only models with a single output tensor"));
-					UE::NNE::FSymbolicTensorShape SymbolicOutputTensorShape = OutputTensorDescs[0].GetShape();
-					checkf(SymbolicOutputTensorShape.IsConcrete(), TEXT("The current example supports only models without variable output tensor dimensions"));
-					TArray<UE::NNE::FTensorShape> OutputTensorShapes = { UE::NNE::FTensorShape::MakeFromSymbolic(SymbolicOutputTensorShape) };
-
-					// Example for creating in- and outputs
-					ModelHelper->InputData.SetNumZeroed(InputTensorShapes[0].Volume());
-					ModelHelper->InputBindings.SetNumZeroed(1);
-					ModelHelper->InputBindings[0].Data = ModelHelper->InputData.GetData();
-					ModelHelper->InputBindings[0].SizeInBytes = ModelHelper->InputData.Num() * sizeof(float);
-
-					ModelHelper->OutputData.SetNumZeroed(OutputTensorShapes[0].Volume());
-					ModelHelper->OutputBindings.SetNumZeroed(1);
-					ModelHelper->OutputBindings[0].Data = ModelHelper->OutputData.GetData();
-					ModelHelper->OutputBindings[0].SizeInBytes = ModelHelper->OutputData.Num() * sizeof(float);
-				}
-				else
-				{
-					UE_LOG(LogTemp, Error, TEXT("Failed to create the model instance"));
-					ModelHelper.Reset();
-				}
 			}
 			else
 			{
@@ -101,9 +66,6 @@ FRealtimeStyleTransferViewExtension::FRealtimeStyleTransferViewExtension(const F
 		}
 	}
 
-
-
-
 }
 
 //------------------------------------------------------------------------------
@@ -111,7 +73,41 @@ FRealtimeStyleTransferViewExtension::FRealtimeStyleTransferViewExtension(const F
 //------------------------------------------------------------------------------
 void FRealtimeStyleTransferViewExtension::SetStyle()
 {
+	if (ModelHelper->ModelInstance.IsValid())
+	{
+		ModelHelper->bIsRunning = false;
 
+		// Example for querying and testing in- and outputs
+		TConstArrayView<UE::NNE::FTensorDesc> InputTensorDescs = ModelHelper->ModelInstance->GetInputTensorDescs();
+		checkf(InputTensorDescs.Num() == 1, TEXT("The current example supports only models with a single input tensor"));
+		UE::NNE::FSymbolicTensorShape SymbolicInputTensorShape = InputTensorDescs[0].GetShape();
+		checkf(SymbolicInputTensorShape.IsConcrete(), TEXT("The current example supports only models without variable input tensor dimensions"));
+		TArray<UE::NNE::FTensorShape> InputTensorShapes = { UE::NNE::FTensorShape::MakeFromSymbolic(SymbolicInputTensorShape) };
+
+		ModelHelper->ModelInstance->SetInputTensorShapes(InputTensorShapes);
+
+		TConstArrayView<UE::NNE::FTensorDesc> OutputTensorDescs = ModelHelper->ModelInstance->GetOutputTensorDescs();
+		checkf(OutputTensorDescs.Num() == 1, TEXT("The current example supports only models with a single output tensor"));
+		UE::NNE::FSymbolicTensorShape SymbolicOutputTensorShape = OutputTensorDescs[0].GetShape();
+		checkf(SymbolicOutputTensorShape.IsConcrete(), TEXT("The current example supports only models without variable output tensor dimensions"));
+		TArray<UE::NNE::FTensorShape> OutputTensorShapes = { UE::NNE::FTensorShape::MakeFromSymbolic(SymbolicOutputTensorShape) };
+
+		// Example for creating in- and outputs
+		ModelHelper->InputData.SetNumZeroed(InputTensorShapes[0].Volume());
+		ModelHelper->InputBindings.SetNumZeroed(1);
+		ModelHelper->InputBindings[0].Data = ModelHelper->InputData.GetData();
+		ModelHelper->InputBindings[0].SizeInBytes = ModelHelper->InputData.Num() * sizeof(float);
+
+		ModelHelper->OutputData.SetNumZeroed(OutputTensorShapes[0].Volume());
+		ModelHelper->OutputBindings.SetNumZeroed(1);
+		ModelHelper->OutputBindings[0].Data = ModelHelper->OutputData.GetData();
+		ModelHelper->OutputBindings[0].SizeInBytes = ModelHelper->OutputData.Num() * sizeof(float);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to create the model instance"));
+		ModelHelper.Reset();
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -216,9 +212,9 @@ void FRealtimeStyleTransferViewExtension::ResizeScreenImageToMatchModel()
 	outputImage.convertTo(vec, CV_32FC1, 1. / 255);
 
 	// Height, Width, Channel to Channel, Height, Width
-	const int inputSize = 224 * 224 * 3;
-	ModelInputImage.Reset();
-	ModelInputImage.SetNumZeroed(inputSize);
+	const int inputSize = 224 * 224 * 3; // 모델에 맞게 수정해야함
+	ModelHelper->InputData.Reset();
+	ModelHelper->InputData.SetNumZeroed(inputSize);
 
 	for (size_t ch = 0; ch < 3; ++ch) {
 		const int blockSize = inputSize / 3;
@@ -228,19 +224,21 @@ void FRealtimeStyleTransferViewExtension::ResizeScreenImageToMatchModel()
 
 			const int stride = ch * blockSize;
 
-			ModelInputImage[Idx + stride] = vec[i];
+			ModelHelper->InputData[Idx + stride] = vec[i];
 			});
 	}
+	ModelHelper->InputBindings[0].Data = ModelHelper->InputData.GetData();
+	ModelHelper->InputBindings[0].SizeInBytes = ModelHelper->InputData.Num() * sizeof(float);
 }
 
 
 //------------------------------------------------------------------------------
 void FRealtimeStyleTransferViewExtension::ResizeModelImageToMatchScreen()
 {
-	if (ModelOutputImage.Num() == 0)
+	if (ModelHelper->OutputBindings.Num() == 0)
 		return;
 
-	cv::Mat resultImage(224, 224, CV_8UC3, ModelOutputImage.GetData());
+	cv::Mat resultImage(224, 224, CV_8UC3, ModelHelper->OutputBindings.GetData());
 	cv::resize(resultImage, resultImage, cv::Size(Width, Height));
 
 	const uint8* RawPixel = resultImage.data;
@@ -266,7 +264,9 @@ void FRealtimeStyleTransferViewExtension::ResizeModelImageToMatchScreen()
 void FRealtimeStyleTransferViewExtension::ApplyStyle()
 {
 	// create network and run model
-	ModelOutputImage.Reset();
+	//ModelHelper->OutputData.Reset(); // 없애야 할 수 있음
+	//ModelHelper->OutputBindings.Reset(); // 없애야 할 수 있음
+
 	if (ModelHelper.IsValid())
 	{
 		// Example for async inference

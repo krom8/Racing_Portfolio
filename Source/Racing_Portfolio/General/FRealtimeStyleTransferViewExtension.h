@@ -12,7 +12,7 @@ public:
 	TArray<float> InputData;
 	TArray<float> OutputData;
 	TArray<UE::NNE::FTensorBindingCPU> InputBindings;
-	TArray<UE::NNE::FTensorBindingCPU> OutputBindings;
+	TArray<UE::NNE::FTensorBindingCPU> OutputBindings; // 필요 없을 수 있다.
 	bool bIsRunning;
 };
 
@@ -22,7 +22,7 @@ class FRealtimeStyleTransferViewExtension: public FSceneViewExtensionBase
 public:
 	FRealtimeStyleTransferViewExtension(const FAutoRegister& AutoRegister);
 
-	static void SetStyle();
+	void SetStyle();
 
 	//~ ISceneViewExtension interface
 	virtual void SetupViewFamily(FSceneViewFamily& InViewFamily) override {}
@@ -41,7 +41,7 @@ private:
 	TArray<uint8> InputImageCPU;
 	TArray<uint32> StylizedImageCPU;
 	TArray<float> ModelInputImage;
-	TArray<uint8> ModelOutputImage;
+	TArray<uint8> ModelOutputImage; 
 	int Width;
 	int Height;
 	void AddStylePass_RenderThread(FRDGBuilder& GraphBuilder, FRDGTextureRef SourceTexture);
