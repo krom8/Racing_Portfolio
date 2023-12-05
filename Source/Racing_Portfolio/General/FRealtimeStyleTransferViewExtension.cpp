@@ -43,6 +43,7 @@ void FRealtimeStyleTransferViewExtension::SetStyle()
 	ViewExtensionIsActive = GDynamicRHI->GetName() == FString(TEXT("D3D12"));
 
 	TObjectPtr<UNNEModelData> ManuallyLoadedModelData = LoadObject<UNNEModelData>(GetTransientPackage(), TEXT("/Game/Content_General/DLModels/TestModel.TestModel"));
+	TSharedPtr< FMyModelHelper > ModelHelper = MakeShared< FMyModelHelper >();
 	if (ManuallyLoadedModelData)
 	{
 		UE_LOG(LogTemp, Display, TEXT("ManuallyLoadedModelData loaded %s"), *ManuallyLoadedModelData->GetName());
