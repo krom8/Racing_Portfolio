@@ -16,5 +16,5 @@ USTBlueprintLibrary::~USTBlueprintLibrary()
 }
 void USTBlueprintLibrary::SetStyle()
 {
-	//FRealtimeStyleTransferViewExtension::SetStyle();
+    FRealtimeStyleTransferViewExtension::SetStyle();
 }

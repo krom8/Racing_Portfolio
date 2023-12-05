@@ -13,6 +13,9 @@
 
 #include "Math/PackedVector.h"
 
+TSharedPtr<FMyModelHelper> FRealtimeStyleTransferViewExtension::ModelHelper = nullptr;
+bool FRealtimeStyleTransferViewExtension::ViewExtensionIsActive = false;
+
 DEFINE_LOG_CATEGORY_STATIC(LogRealtimeStyleTransfer, Log, All);
 void RenderMyTest(FRHICommandList& RHICmdList, ERHIFeatureLevel::Type FeatureLevel, const FLinearColor& Color);
 
@@ -29,6 +32,13 @@ namespace RealtimeStyleTransfer
 //------------------------------------------------------------------------------
 FRealtimeStyleTransferViewExtension::FRealtimeStyleTransferViewExtension(const FAutoRegister& AutoRegister)
 	: FSceneViewExtensionBase(AutoRegister)
+{
+}
+
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+void FRealtimeStyleTransferViewExtension::SetStyle()
 {
 	ViewExtensionIsActive = GDynamicRHI->GetName() == FString(TEXT("D3D12"));
 
@@ -47,12 +57,45 @@ FRealtimeStyleTransferViewExtension::FRealtimeStyleTransferViewExtension(const F
 		TWeakInterfacePtr<INNERuntimeCPU> Runtime = UE::NNE::GetRuntime<INNERuntimeCPU>(FString("NNERuntimeORTCpu"));
 		if (Runtime.IsValid())
 		{
-			ModelHelper = MakeShared<FMyModelHelper>();
-
 			TUniquePtr<UE::NNE::IModelCPU> Model = Runtime->CreateModel(ManuallyLoadedModelData);
 			if (Model.IsValid())
 			{
 				ModelHelper->ModelInstance = Model->CreateModelInstance();
+				if (ModelHelper->ModelInstance.IsValid())
+				{
+					ModelHelper->bIsRunning = false;
+
+					// Example for querying and testing in- and outputs
+					TConstArrayView<UE::NNE::FTensorDesc> InputTensorDescs = ModelHelper->ModelInstance->GetInputTensorDescs();
+					checkf(InputTensorDescs.Num() == 1, TEXT("The current example supports only models with a single input tensor"));
+					UE::NNE::FSymbolicTensorShape SymbolicInputTensorShape = InputTensorDescs[0].GetShape();
+					checkf(SymbolicInputTensorShape.IsConcrete(), TEXT("The current example supports only models without variable input tensor dimensions"));
+					TArray<UE::NNE::FTensorShape> InputTensorShapes = { UE::NNE::FTensorShape::MakeFromSymbolic(SymbolicInputTensorShape) };
+
+					ModelHelper->ModelInstance->SetInputTensorShapes(InputTensorShapes);
+
+					TConstArrayView<UE::NNE::FTensorDesc> OutputTensorDescs = ModelHelper->ModelInstance->GetOutputTensorDescs();
+					checkf(OutputTensorDescs.Num() == 1, TEXT("The current example supports only models with a single output tensor"));
+					UE::NNE::FSymbolicTensorShape SymbolicOutputTensorShape = OutputTensorDescs[0].GetShape();
+					checkf(SymbolicOutputTensorShape.IsConcrete(), TEXT("The current example supports only models without variable output tensor dimensions"));
+					TArray<UE::NNE::FTensorShape> OutputTensorShapes = { UE::NNE::FTensorShape::MakeFromSymbolic(SymbolicOutputTensorShape) };
+
+					// Example for creating in- and outputs
+					ModelHelper->InputData.SetNumZeroed(InputTensorShapes[0].Volume());
+					ModelHelper->InputBindings.SetNumZeroed(1);
+					ModelHelper->InputBindings[0].Data = ModelHelper->InputData.GetData();
+					ModelHelper->InputBindings[0].SizeInBytes = ModelHelper->InputData.Num() * sizeof(float);
+
+					ModelHelper->OutputData.SetNumZeroed(OutputTensorShapes[0].Volume());
+					ModelHelper->OutputBindings.SetNumZeroed(1);
+					ModelHelper->OutputBindings[0].Data = ModelHelper->OutputData.GetData();
+					ModelHelper->OutputBindings[0].SizeInBytes = ModelHelper->OutputData.Num() * sizeof(float);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("Failed to create the model instance"));
+					ModelHelper.Reset();
+				}
 			}
 			else
 			{
@@ -64,49 +107,6 @@ FRealtimeStyleTransferViewExtension::FRealtimeStyleTransferViewExtension(const F
 		{
 			UE_LOG(LogTemp, Error, TEXT("Cannot find runtime NNERuntimeORTCpu, please enable the corresponding plugin"));
 		}
-	}
-
-}
-
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-void FRealtimeStyleTransferViewExtension::SetStyle()
-{
-	if (ModelHelper->ModelInstance.IsValid())
-	{
-		ModelHelper->bIsRunning = false;
-
-		// Example for querying and testing in- and outputs
-		TConstArrayView<UE::NNE::FTensorDesc> InputTensorDescs = ModelHelper->ModelInstance->GetInputTensorDescs();
-		checkf(InputTensorDescs.Num() == 1, TEXT("The current example supports only models with a single input tensor"));
-		UE::NNE::FSymbolicTensorShape SymbolicInputTensorShape = InputTensorDescs[0].GetShape();
-		checkf(SymbolicInputTensorShape.IsConcrete(), TEXT("The current example supports only models without variable input tensor dimensions"));
-		TArray<UE::NNE::FTensorShape> InputTensorShapes = { UE::NNE::FTensorShape::MakeFromSymbolic(SymbolicInputTensorShape) };
-
-		ModelHelper->ModelInstance->SetInputTensorShapes(InputTensorShapes);
-
-		TConstArrayView<UE::NNE::FTensorDesc> OutputTensorDescs = ModelHelper->ModelInstance->GetOutputTensorDescs();
-		checkf(OutputTensorDescs.Num() == 1, TEXT("The current example supports only models with a single output tensor"));
-		UE::NNE::FSymbolicTensorShape SymbolicOutputTensorShape = OutputTensorDescs[0].GetShape();
-		checkf(SymbolicOutputTensorShape.IsConcrete(), TEXT("The current example supports only models without variable output tensor dimensions"));
-		TArray<UE::NNE::FTensorShape> OutputTensorShapes = { UE::NNE::FTensorShape::MakeFromSymbolic(SymbolicOutputTensorShape) };
-
-		// Example for creating in- and outputs
-		ModelHelper->InputData.SetNumZeroed(InputTensorShapes[0].Volume());
-		ModelHelper->InputBindings.SetNumZeroed(1);
-		ModelHelper->InputBindings[0].Data = ModelHelper->InputData.GetData();
-		ModelHelper->InputBindings[0].SizeInBytes = ModelHelper->InputData.Num() * sizeof(float);
-
-		ModelHelper->OutputData.SetNumZeroed(OutputTensorShapes[0].Volume());
-		ModelHelper->OutputBindings.SetNumZeroed(1);
-		ModelHelper->OutputBindings[0].Data = ModelHelper->OutputData.GetData();
-		ModelHelper->OutputBindings[0].SizeInBytes = ModelHelper->OutputData.Num() * sizeof(float);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create the model instance"));
-		ModelHelper.Reset();
 	}
 }
 

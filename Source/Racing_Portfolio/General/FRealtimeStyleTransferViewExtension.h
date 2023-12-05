@@ -22,7 +22,7 @@ class FRealtimeStyleTransferViewExtension: public FSceneViewExtensionBase
 public:
 	FRealtimeStyleTransferViewExtension(const FAutoRegister& AutoRegister);
 
-	void SetStyle();
+	static void SetStyle();
 
 	//~ ISceneViewExtension interface
 	virtual void SetupViewFamily(FSceneViewFamily& InViewFamily) override {}
@@ -36,7 +36,7 @@ public:
 	FScreenPassTexture AfterTonemap_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View, const FPostProcessMaterialInputs& InOutInputs);
 
 private:
-	bool ViewExtensionIsActive;
+	static bool ViewExtensionIsActive;
 	TArray<FColor> RawImage;
 	TArray<uint8> InputImageCPU;
 	TArray<uint32> StylizedImageCPU;
@@ -50,7 +50,7 @@ private:
 	void ResizeScreenImageToMatchModel();
 	void ResizeModelImageToMatchScreen();
 	void ApplyStyle();
-	TSharedPtr<FMyModelHelper> ModelHelper;
+	static TSharedPtr<FMyModelHelper> ModelHelper;
 
 protected:
 	FScreenPassTexture ApplyStyleTransfer(FRDGBuilder& GraphBuilder, const FSceneView& View, const FPostProcessMaterialInputs& InOutInputs, const FString& DDSFileName);

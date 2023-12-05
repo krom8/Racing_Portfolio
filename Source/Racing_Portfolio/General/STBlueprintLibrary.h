@@ -18,6 +18,6 @@ public:
     USTBlueprintLibrary(const FObjectInitializer& ObjectInitializer);
     ~USTBlueprintLibrary();
 
-    UFUNCTION(BlueprintCallable, Category = "YourCategory")
-    void SetStyle();
+    UFUNCTION(BlueprintCallable, Category = "Style Transfer")
+    static void SetStyle();
 };
