@@ -40,8 +40,8 @@ private:
 	TArray<FColor> RawImage;
 	TArray<uint8> InputImageCPU;
 	TArray<uint32> StylizedImageCPU;
-	TArray<float> ModelInputImage;
-	TArray<uint8> ModelOutputImage; 
+	//TArray<float> ModelInputImage;
+	//TArray<uint8> ModelOutputImage; 
 	int Width;
 	int Height;
 	void AddStylePass_RenderThread(FRDGBuilder& GraphBuilder, FRDGTextureRef SourceTexture);
@@ -50,7 +50,15 @@ private:
 	void ResizeScreenImageToMatchModel();
 	void ResizeModelImageToMatchScreen();
 	void ApplyStyle();
+
+	void SaveTextureToPNGFile(const TArray<FColor>& InPixels, int32 InWidth, int32 InHeight, const FString& FilePath);
+	void SaveTextureToPNGFile(const TArray<unsigned char, TSizedDefaultAllocator<32>>& InPixels, int32 InWidth, int32 InHeight, const FString& FilePath);
+
+
 	static TSharedPtr<FMyModelHelper> ModelHelper;
+
+
+
 
 protected:
 	FScreenPassTexture ApplyStyleTransfer(FRDGBuilder& GraphBuilder, const FSceneView& View, const FPostProcessMaterialInputs& InOutInputs, const FString& DDSFileName);

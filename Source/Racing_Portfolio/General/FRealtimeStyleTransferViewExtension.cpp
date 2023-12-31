@@ -13,6 +13,8 @@
 
 #include "Math/PackedVector.h"
 
+#include "ImageUtils.h"  
+
 TSharedPtr<FMyModelHelper> FRealtimeStyleTransferViewExtension::ModelHelper = nullptr;
 bool FRealtimeStyleTransferViewExtension::ViewExtensionIsActive = false;
 
@@ -43,7 +45,7 @@ void FRealtimeStyleTransferViewExtension::SetStyle()
 	ViewExtensionIsActive = GDynamicRHI->GetName() == FString(TEXT("D3D12"));
 
 	TObjectPtr<UNNEModelData> ManuallyLoadedModelData = LoadObject<UNNEModelData>(GetTransientPackage(), TEXT("/Game/Content_General/DLModels/TestModel.TestModel"));
-	TSharedPtr< FMyModelHelper > ModelHelper = MakeShared< FMyModelHelper >();
+	ModelHelper = MakeShared< FMyModelHelper >();
 	if (ManuallyLoadedModelData)
 	{
 		UE_LOG(LogTemp, Display, TEXT("ManuallyLoadedModelData loaded %s"), *ManuallyLoadedModelData->GetName());
@@ -91,6 +93,8 @@ void FRealtimeStyleTransferViewExtension::SetStyle()
 					ModelHelper->OutputBindings.SetNumZeroed(1);
 					ModelHelper->OutputBindings[0].Data = ModelHelper->OutputData.GetData();
 					ModelHelper->OutputBindings[0].SizeInBytes = ModelHelper->OutputData.Num() * sizeof(float);
+
+
 				}
 				else
 				{
@@ -187,6 +191,9 @@ void FRealtimeStyleTransferViewExtension::CopyTextureFromGPUToCPU(FRHICommandLis
 		InputImageCPU[i + 2] = Pixel.B;
 		});
 
+	// PNG 파일로 저장
+	SaveTextureToPNGFile(RawImage, Width, Height, TEXT("D:/Test.png"));
+	SaveTextureToPNGFile(InputImageCPU, Width, Height, TEXT("D:/TestInput.png"));
 	// print time elapsed
 	double secondsElapsed = FPlatformTime::Seconds() - startSeconds;
 
@@ -284,14 +291,19 @@ void FRealtimeStyleTransferViewExtension::ApplyStyle()
 					{
 						UE_LOG(LogTemp, Error, TEXT("Failed to run the model"));
 					}
+
+
+
 					AsyncTask(ENamedThreads::GameThread, [ModelHelperPtr]()
 						{
 							ModelHelperPtr->bIsRunning = false;
 						});
-				});
 
+				});
 		}
 	}
+
+
 }
 
 //------------------------------------------------------------------------------
@@ -335,6 +347,53 @@ FScreenPassTexture FRealtimeStyleTransferViewExtension::AfterTonemap_RenderThrea
 	RDG_EVENT_SCOPE(GraphBuilder, "RealtimeStyleTransfer_AfterTonemap");
 	return ApplyStyleTransfer(GraphBuilder, View, InOutInputs, FString::Printf(TEXT("After%02dTonemap"), EPostProcessingPass::Tonemap));
 }
+
+
+
+void FRealtimeStyleTransferViewExtension::SaveTextureToPNGFile(const TArray<FColor>& InPixels, int32 InWidth, int32 InHeight, const FString& FilePath)
+{
+	// PNG 파일로 저장
+	TArray<uint8> PNGData;
+	FImageUtils::CompressImageArray(InWidth, InHeight, InPixels, PNGData);
+
+	// Save PNG data to file
+	if (FFileHelper::SaveArrayToFile(PNGData, *FilePath))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Saved PNG file: %s"), *FilePath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to save PNG file: %s"), *FilePath);
+	}
+}
+
+
+void FRealtimeStyleTransferViewExtension::SaveTextureToPNGFile(const TArray<unsigned char, TSizedDefaultAllocator<32>>& InPixels, int32 InWidth, int32 InHeight, const FString& FilePath)
+{
+	// FColor 배열을 생성하고 InputImageCPU의 값을 복사
+	TArray<FColor> InColors;
+	InColors.SetNumUninitialized(InPixels.Num() / 3);
+
+	for (int32 i = 0; i < InPixels.Num(); i += 3)
+	{
+		InColors[i / 3] = FColor(InPixels[i], InPixels[i + 1], InPixels[i + 2]);
+	}
+
+	// PNG 파일로 저장할 데이터 압축
+	TArray<uint8> PNGData;
+	FImageUtils::CompressImageArray(InWidth, InHeight, InColors, PNGData);
+
+	// PNG 데이터를 파일로 저장
+	if (FFileHelper::SaveArrayToFile(PNGData, *FilePath))
+	{
+		UE_LOG(LogTemp, Log, TEXT("PNG 파일을 저장했습니다: %s"), *FilePath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("PNG 파일 저장 실패: %s"), *FilePath);
+	}
+}
+
 
 
 #undef LOCTEXT_NAMESPACE
