@@ -171,26 +171,11 @@ void FRealtimeStyleTransferViewExtension::CopyTextureFromGPUToCPU(FRHICommandLis
 
 	const int PixelCount = Width * Height;
 
-	struct FReadSurfaceContext
-	{
-		FRHITexture* BackBuffer;
-		TArray<FColor>& OutData;
-		FIntRect Rect;
-		FReadSurfaceDataFlags Flags;
-	};
-
-	const FReadSurfaceContext readSurfaceContext = {
-		Texture,
-		RawImage,
-		FIntRect(0, 0, Width, Height),
-		FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX)
-	};
-
 	RHICmdList.ReadSurfaceData(
-		readSurfaceContext.BackBuffer,
-		readSurfaceContext.Rect,
-		readSurfaceContext.OutData,
-		readSurfaceContext.Flags);
+		Texture,
+		FIntRect(0, 0, Width, Height),
+		RawImage,
+		FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
 
 	InputImageCPU.Reset();
 	InputImageCPU.SetNumZeroed(PixelCount * 3);
