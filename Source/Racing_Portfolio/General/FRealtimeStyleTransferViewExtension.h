@@ -12,7 +12,7 @@ public:
 	TArray<float> InputData;
 	TArray<float> OutputData;
 	TArray<UE::NNE::FTensorBindingCPU> InputBindings;
-	TArray<UE::NNE::FTensorBindingCPU> OutputBindings; // 필요 없을 수 있다.
+	TArray<UE::NNE::FTensorBindingCPU> OutputBindings;
 	bool bIsRunning;
 };
 
@@ -53,8 +53,8 @@ private:
 
 	void SaveTextureToPNGFile(const TArray<FColor>& InPixels, int32 InWidth, int32 InHeight, const FString& FilePath);
 	void SaveTextureToPNGFile(const TArray<unsigned char, TSizedDefaultAllocator<32>>& InPixels, int32 InWidth, int32 InHeight, const FString& FilePath);
-
-
+	void SaveJsonSerializableArrayToPNGFile(FJsonSerializableArrayFloat ImageArray, int32 InWidth, int32 InHeight, const FString& FilePath);
+	void SaveJsonSerializableArrayToPNGFile2(FJsonSerializableArrayFloat ImageArray, int32 InWidth, int32 InHeight, const FString& FilePath);
 	static TSharedPtr<FMyModelHelper> ModelHelper;
 
 
