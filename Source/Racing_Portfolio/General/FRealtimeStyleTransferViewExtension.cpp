@@ -33,6 +33,7 @@ namespace RealtimeStyleTransfer
 FRealtimeStyleTransferViewExtension::FRealtimeStyleTransferViewExtension(const FAutoRegister& AutoRegister)
 	: FSceneViewExtensionBase(AutoRegister)
 {
+	ViewExtensionIsActive = GDynamicRHI->GetName() == FString(TEXT("D3D12"));
 }
 
 //------------------------------------------------------------------------------
@@ -143,8 +144,10 @@ void FRealtimeStyleTransferViewExtension::AddStylePass_RenderThread(
 		ERDGPassFlags::Readback,
 		[this, SourceTexture](FRHICommandListImmediate& RHICmdList) {
 			if (ModelHelper == nullptr)
+			{
 				return;
-
+			}
+				
 			FRHITexture2D* Texture = SourceTexture->GetRHI()->GetTexture2D();
 			Width = Texture->GetSizeX();
 			Height = Texture->GetSizeY();
@@ -289,7 +292,7 @@ void FRealtimeStyleTransferViewExtension::ResizeModelImageToMatchScreen()
 	//resultImage.convertTo(resultImage, CV_8UC3, 255);
 
 	
-	cv::resize(resultImage, resultImage, cv::Size(Width, Height));
+	cv::resize(resultImage, resultImage, cv::Size(Width	, Height));
 	imwrite("D:/CVoutputresize.png", resultImage);
 	const uint8* RawPixel = resultImage.data;
 	const int PixelCount = Width * Height;
@@ -315,10 +318,11 @@ void FRealtimeStyleTransferViewExtension::ResizeModelImageToMatchScreen()
 void FRealtimeStyleTransferViewExtension::ApplyStyle()
 {
 	// create network and run model
-	//ModelHelper->OutputData.Reset(); // 없애야 할 수 있음
 	//ModelHelper->OutputBindings.Reset(); // 없애야 할 수 있음
 	const int inputSize = 224 * 224 * 3;
-	
+	const int outputSize = 222 * 222 * 3;
+	ModelHelper->OutputData.Reset(); // 없애야 할 수 있음
+	ModelHelper->OutputData.SetNumZeroed(outputSize);
 
 	for (size_t i = 0; i < inputSize; ++i)
 	{
