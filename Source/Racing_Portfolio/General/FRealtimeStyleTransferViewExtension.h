@@ -36,7 +36,7 @@ public:
 	FScreenPassTexture AfterTonemap_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View, const FPostProcessMaterialInputs& InOutInputs);
 
 private:
-	static bool ViewExtensionIsActive;
+	bool ViewExtensionIsActive;
 	TArray<FColor> RawImage;
 	TArray<uint8> InputImageCPU;
 	TArray<uint32> StylizedImageCPU;
@@ -56,9 +56,7 @@ private:
 	void SaveJsonSerializableArrayToPNGFile(FJsonSerializableArrayFloat ImageArray, int32 InWidth, int32 InHeight, const FString& FilePath);
 	void SaveJsonSerializableArrayToPNGFile2(FJsonSerializableArrayFloat ImageArray, int32 InWidth, int32 InHeight, const FString& FilePath);
 	static TSharedPtr<FMyModelHelper> ModelHelper;
-
-
-
+	int check = 0;
 
 protected:
 	FScreenPassTexture ApplyStyleTransfer(FRDGBuilder& GraphBuilder, const FSceneView& View, const FPostProcessMaterialInputs& InOutInputs, const FString& DDSFileName);

@@ -2,7 +2,6 @@
 #include "Modules/ModuleManager.h"
 #include "PostProcess/PostProcessMaterial.h"
 #include "PostProcess/SceneRenderTargets.h"
-// STNeuiralNetwork
 #include "PreOpenCVHeaders.h"
 #include "OpenCVHelper.h"
 #include "opencv2/imgproc.hpp"
@@ -13,8 +12,6 @@
 #include "Math/PackedVector.h"
 #include "ImageUtils.h"  
 
-TSharedPtr<FMyModelHelper> FRealtimeStyleTransferViewExtension::ModelHelper = nullptr;
-bool FRealtimeStyleTransferViewExtension::ViewExtensionIsActive = false;
 
 DEFINE_LOG_CATEGORY_STATIC(LogRealtimeStyleTransfer, Log, All);
 void RenderMyTest(FRHICommandList& RHICmdList, ERHIFeatureLevel::Type FeatureLevel, const FLinearColor& Color);
@@ -29,20 +26,20 @@ namespace RealtimeStyleTransfer
 		TEXT("=0:off (default), >0: on"), 
 		ECVF_Cheat | ECVF_RenderThreadSafe);
 }
+
 //------------------------------------------------------------------------------
 FRealtimeStyleTransferViewExtension::FRealtimeStyleTransferViewExtension(const FAutoRegister& AutoRegister)
 	: FSceneViewExtensionBase(AutoRegister)
 {
 	ViewExtensionIsActive = GDynamicRHI->GetName() == FString(TEXT("D3D12"));
+
 }
 
 //------------------------------------------------------------------------------
-
+TSharedPtr<FMyModelHelper> FRealtimeStyleTransferViewExtension::ModelHelper = nullptr;
 //------------------------------------------------------------------------------
 void FRealtimeStyleTransferViewExtension::SetStyle()
 {
-	ViewExtensionIsActive = GDynamicRHI->GetName() == FString(TEXT("D3D12"));
-
 	TObjectPtr<UNNEModelData> ManuallyLoadedModelData = LoadObject<UNNEModelData>(GetTransientPackage(), TEXT("/Game/Content_General/DLModels/TestModel3.TestModel3"));
 	ModelHelper = MakeShared< FMyModelHelper >();
 	if (ManuallyLoadedModelData)
@@ -66,7 +63,6 @@ void FRealtimeStyleTransferViewExtension::SetStyle()
 				if (ModelHelper->ModelInstance.IsValid())
 				{
 					ModelHelper->bIsRunning = false;
-
 					// Example for querying and testing in- and outputs
 					TConstArrayView<UE::NNE::FTensorDesc> InputTensorDescs = ModelHelper->ModelInstance->GetInputTensorDescs();
 					checkf(InputTensorDescs.Num() == 1, TEXT("The current example supports only models with a single input tensor"));
@@ -87,13 +83,10 @@ void FRealtimeStyleTransferViewExtension::SetStyle()
 					ModelHelper->InputBindings.SetNumZeroed(1);
 					ModelHelper->InputBindings[0].Data = ModelHelper->InputData.GetData();
 					ModelHelper->InputBindings[0].SizeInBytes = ModelHelper->InputData.Num() * sizeof(float);
-
 					ModelHelper->OutputData.SetNumZeroed(OutputTensorShapes[0].Volume());
 					ModelHelper->OutputBindings.SetNumZeroed(1);
 					ModelHelper->OutputBindings[0].Data = ModelHelper->OutputData.GetData();
 					ModelHelper->OutputBindings[0].SizeInBytes = ModelHelper->OutputData.Num() * sizeof(float);
-
-
 				}
 				else
 				{
@@ -157,6 +150,7 @@ void FRealtimeStyleTransferViewExtension::AddStylePass_RenderThread(
 			ResizeModelImageToMatchScreen();
 			CopyTextureFromCPUToGPU(RHICmdList, Texture);
 		});
+	RealtimeStyleTransfer::IsActive = 0;
 }
 
 
@@ -165,6 +159,8 @@ void FRealtimeStyleTransferViewExtension::CopyTextureFromCPUToGPU(FRHICommandLis
 {
 	const FUpdateTextureRegion2D TextureRegion2D(0, 0, 0, 0, Width, Height);
 	RHICmdList.UpdateTexture2D(Texture, 0, TextureRegion2D, Width * 4, (const uint8*)StylizedImageCPU.GetData());
+	Texture;
+	int a = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -173,13 +169,17 @@ void FRealtimeStyleTransferViewExtension::CopyTextureFromGPUToCPU(FRHICommandLis
 	double startSeconds = FPlatformTime::Seconds();
 
 	const int PixelCount = Width * Height;
-
+	if (check != 0)
+	{
+		SaveTextureToPNGFile(RawImage, Width, Height, TEXT("D:/First.png"));
+	}
+	check += 1;
 	RHICmdList.ReadSurfaceData(
 		Texture,
 		FIntRect(0, 0, Width, Height),
 		RawImage,
 		FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-
+	SaveTextureToPNGFile(RawImage, Width, Height, TEXT("D:/Second.png"));
 	InputImageCPU.Reset();
 	InputImageCPU.SetNumZeroed(PixelCount * 3);
 
@@ -222,7 +222,7 @@ void FRealtimeStyleTransferViewExtension::ResizeScreenImageToMatchModel()
 	outputImage.convertTo(vec, CV_32FC1, 1. / 255);
 
 	// Height, Width, Channel to Channel, Height, Width
-	const int inputSize = 224 * 224 * 3; // 모델에 맞게 수정해야함
+	const int inputSize = 224 * 224 * 3; 
 	ModelHelper->InputData.Reset();
 	ModelHelper->InputData.SetNumZeroed(inputSize);
 
@@ -237,15 +237,6 @@ void FRealtimeStyleTransferViewExtension::ResizeScreenImageToMatchModel()
 			ModelHelper->InputData[Idx + stride] = vec[i];
 			});
 	}
-	//const int blockSize = inputSize / 3;
-	//for (size_t st = 0; st < inputSize; ++st)
-	//{
-	//	if (vec[st] > 0) {
-	//		int b = 0;
-	//	}
-	//	ModelHelper->InputData[st] = vec[st];
-	//	int fq = 0;
-	//}
 	ModelHelper->InputBindings[0].Data = ModelHelper->InputData.GetData();
 	ModelHelper->InputBindings[0].SizeInBytes = ModelHelper->InputData.Num() * sizeof(float);
 
@@ -268,8 +259,10 @@ void FRealtimeStyleTransferViewExtension::ResizeScreenImageToMatchModel()
 void FRealtimeStyleTransferViewExtension::ResizeModelImageToMatchScreen()
 {
 	if (ModelHelper->OutputBindings.Num() == 0)
+	{
 		return;
-
+	}
+		
 	const int OutputSize = 222 * 222 * 3;
 	const int BlockSize = OutputSize / 3;
 	TArray<float> ModelOutput = ModelHelper->OutputData;
@@ -284,6 +277,11 @@ void FRealtimeStyleTransferViewExtension::ResizeModelImageToMatchScreen()
 		vec[i * 3 + 1] = Green;
 		vec[i * 3 + 2] = Blue;
 	}
+
+	ModelHelper->OutputData.Reset(); // 없애야 할 수 있음
+	ModelHelper->OutputData.SetNumZeroed(OutputSize);
+	ModelHelper->OutputBindings[0].Data = ModelHelper->OutputData.GetData();
+	ModelHelper->OutputBindings[0].SizeInBytes = ModelHelper->OutputData.Num() * sizeof(float);
 
 
 	cv::Mat resultImage(222, 222, CV_8UC3, vec.data());
@@ -319,10 +317,10 @@ void FRealtimeStyleTransferViewExtension::ApplyStyle()
 {
 	// create network and run model
 	//ModelHelper->OutputBindings.Reset(); // 없애야 할 수 있음
+
 	const int inputSize = 224 * 224 * 3;
 	const int outputSize = 222 * 222 * 3;
-	ModelHelper->OutputData.Reset(); // 없애야 할 수 있음
-	ModelHelper->OutputData.SetNumZeroed(outputSize);
+
 
 	for (size_t i = 0; i < inputSize; ++i)
 	{
@@ -347,8 +345,9 @@ void FRealtimeStyleTransferViewExtension::ApplyStyle()
 	TConstArrayView<UE::NNE::FTensorDesc> InputTensorDescs = ModelHelper->ModelInstance->GetInputTensorDescs();
 	UE::NNE::FSymbolicTensorShape SymbolicInputTensorShape = InputTensorDescs[0].GetShape();
 	TConstArrayView<UE::NNE::FTensorDesc> OutputTensorDescs = ModelHelper->ModelInstance->GetOutputTensorDescs();
-	SaveJsonSerializableArrayToPNGFile2(ModelHelper->OutputData, 224, 224, "D:/modeloutput.png");
+	SaveJsonSerializableArrayToPNGFile2(ModelHelper->OutputData, 222, 222, "D:/modeloutput.png");
 	int fewf = 0;
+
 }
 
 //------------------------------------------------------------------------------
@@ -359,9 +358,10 @@ void FRealtimeStyleTransferViewExtension::SubscribeToPostProcessingPass(EPostPro
 
 	if (!bIsPassEnabled)
 		return;
-
+	 
 	if (PassId == EPostProcessingPass::Tonemap)
 		InOutPassCallbacks.Add(FAfterPassCallbackDelegate::CreateRaw(this, &FRealtimeStyleTransferViewExtension::AfterTonemap_RenderThread));
+
 }
 
 //------------------------------------------------------------------------------
@@ -385,6 +385,8 @@ FScreenPassTexture FRealtimeStyleTransferViewExtension::ApplyStyleTransfer(FRDGB
 
 	return ReturnTexture;
 }
+
+
 
 //------------------------------------------------------------------------------
 FScreenPassTexture FRealtimeStyleTransferViewExtension::AfterTonemap_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View, const FPostProcessMaterialInputs& InOutInputs)

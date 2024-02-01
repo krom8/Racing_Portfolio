@@ -11,10 +11,11 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"CoreUObject",
-				"ChaosVehicles",
+				"ChaosVehicles"
 			]
 		}
 	],
+
 	"Plugins": [
 		{
 			"Name": "ModelingToolsEditorMode",
