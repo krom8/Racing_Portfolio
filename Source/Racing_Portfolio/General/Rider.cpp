@@ -112,6 +112,7 @@ void ARider::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("DriftOn", IE_Pressed, this, &ARider::DriftOn);
 	PlayerInputComponent->BindAction("DriftOff", IE_Released, this, &ARider::DriftOff);
 	PlayerInputComponent->BindAction("Boost", IE_Pressed, this, &ARider::Boost);
+
 }
 
 void ARider::MoveForward(float Value)
@@ -160,3 +161,4 @@ void ARider::BoostOff()
 	CanBoost = true;
 	GetWorld()->GetTimerManager().ClearTimer(BoostTimerHandle);
 }
+

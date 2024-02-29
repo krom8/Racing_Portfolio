@@ -70,4 +70,5 @@ private:
 
 	bool CanBoost = true;
 	FTimerHandle BoostTimerHandle;
+
 };
