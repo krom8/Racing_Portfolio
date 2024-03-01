@@ -15,7 +15,8 @@ AAIRunningPawn::AAIRunningPawn()
 void AAIRunningPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	ForwardFloat = 0;
+	TurnFloat = 0;
 }
 
 // Called every frame
