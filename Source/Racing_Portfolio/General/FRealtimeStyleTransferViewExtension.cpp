@@ -110,6 +110,7 @@ void FRealtimeStyleTransferViewExtension::SetStyle()
 //------------------------------------------------------------------------------
 bool FRealtimeStyleTransferViewExtension::IsActiveThisFrame_Internal(const FSceneViewExtensionContext& Context) const
 {
+	UWorld* CW = Context.GetWorld();
 	return ViewExtensionIsActive;
 }
 
@@ -130,6 +131,8 @@ void FRealtimeStyleTransferViewExtension::AddStylePass_RenderThread(
 
 	FStylePassParameters* Parameters = GraphBuilder.AllocParameters<FStylePassParameters>();
 	Parameters->Source = SourceTexture;
+
+
 
 	GraphBuilder.AddPass(
 		RDG_EVENT_NAME("RealtimeStyleTransfer"),
