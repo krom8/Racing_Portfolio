@@ -153,7 +153,7 @@ void FRealtimeStyleTransferViewExtension::AddStylePass_RenderThread(
 			ResizeModelImageToMatchScreen();
 			CopyTextureFromCPUToGPU(RHICmdList, Texture);
 		});
-	RealtimeStyleTransfer::IsActive = 0;
+
 }
 
 
@@ -172,17 +172,14 @@ void FRealtimeStyleTransferViewExtension::CopyTextureFromGPUToCPU(FRHICommandLis
 	double startSeconds = FPlatformTime::Seconds();
 
 	const int PixelCount = Width * Height;
-	if (check != 0)
-	{
-		SaveTextureToPNGFile(RawImage, Width, Height, TEXT("D:/First.png"));
-	}
+
 	check += 1;
 	RHICmdList.ReadSurfaceData(
 		Texture,
 		FIntRect(0, 0, Width, Height),
 		RawImage,
 		FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-	SaveTextureToPNGFile(RawImage, Width, Height, TEXT("D:/Second.png"));
+
 	InputImageCPU.Reset();
 	InputImageCPU.SetNumZeroed(PixelCount * 3);
 
@@ -196,8 +193,7 @@ void FRealtimeStyleTransferViewExtension::CopyTextureFromGPUToCPU(FRHICommandLis
 		});
 
 	// PNG 파일로 저장
-	SaveTextureToPNGFile(RawImage, Width, Height, TEXT("D:/Test.png"));
-	SaveTextureToPNGFile(InputImageCPU, Width, Height, TEXT("D:/TestInput.png"));
+
 	// print time elapsed
 	double secondsElapsed = FPlatformTime::Seconds() - startSeconds;
 
@@ -244,17 +240,7 @@ void FRealtimeStyleTransferViewExtension::ResizeScreenImageToMatchModel()
 	ModelHelper->InputBindings[0].SizeInBytes = ModelHelper->InputData.Num() * sizeof(float);
 
 
-	for (size_t i=0; i < inputSize; ++i) {
-		if (ModelHelper->InputData[i] != 0.0)
-		{
-			float k = ModelHelper->InputData[i];
-			int q = 0;
-		}
-	} 
 
-
-	SaveJsonSerializableArrayToPNGFile(ModelHelper->InputData, 224, 224, TEXT("D:/Input.png"));
-	int a = 0;
 }
 
 
@@ -348,8 +334,7 @@ void FRealtimeStyleTransferViewExtension::ApplyStyle()
 	TConstArrayView<UE::NNE::FTensorDesc> InputTensorDescs = ModelHelper->ModelInstance->GetInputTensorDescs();
 	UE::NNE::FSymbolicTensorShape SymbolicInputTensorShape = InputTensorDescs[0].GetShape();
 	TConstArrayView<UE::NNE::FTensorDesc> OutputTensorDescs = ModelHelper->ModelInstance->GetOutputTensorDescs();
-	SaveJsonSerializableArrayToPNGFile2(ModelHelper->OutputData, 222, 222, "D:/modeloutput.png");
-	int fewf = 0;
+
 
 }
 
@@ -399,117 +384,6 @@ FScreenPassTexture FRealtimeStyleTransferViewExtension::AfterTonemap_RenderThrea
 }
 
 
-
-void FRealtimeStyleTransferViewExtension::SaveTextureToPNGFile(const TArray<FColor>& InPixels, int32 InWidth, int32 InHeight, const FString& FilePath)
-{
-	// PNG 파일로 저장
-	TArray<uint8> PNGData;
-	PNGData.SetNumZeroed(InWidth * InHeight * 3);
-	FImageUtils::CompressImageArray(InWidth, InHeight, InPixels, PNGData);
-
-	// Save PNG data to file
-	if (FFileHelper::SaveArrayToFile(PNGData, *FilePath))
-	{
-		UE_LOG(LogTemp, Log, TEXT("Saved PNG file: %s"), *FilePath);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to save PNG file: %s"), *FilePath);
-	}
-}
-
-
-void FRealtimeStyleTransferViewExtension::SaveTextureToPNGFile(const TArray<unsigned char, TSizedDefaultAllocator<32>>& InPixels, int32 InWidth, int32 InHeight, const FString& FilePath)
-{
-	// FColor 배열을 생성하고 InputImageCPU의 값을 복사
-	TArray<FColor> InColors;
-	InColors.SetNumUninitialized(InPixels.Num() / 3);
-
-	for (int32 i = 0; i < InPixels.Num(); i += 3)
-	{
-		InColors[i / 3] = FColor(InPixels[i], InPixels[i + 1], InPixels[i + 2]);
-	}
-
-	// PNG 파일로 저장할 데이터 압축
-	TArray<uint8> PNGData;
-	PNGData.SetNumZeroed(InWidth * InHeight * 3);
-	FImageUtils::CompressImageArray(InWidth, InHeight, InColors, PNGData);
-
-	// PNG 데이터를 파일로 저장
-	if (FFileHelper::SaveArrayToFile(PNGData, *FilePath))
-	{
-		UE_LOG(LogTemp, Log, TEXT("PNG 파일을 저장했습니다: %s"), *FilePath);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("PNG 파일 저장 실패: %s"), *FilePath);
-	}
-}
-
-
-void FRealtimeStyleTransferViewExtension::SaveJsonSerializableArrayToPNGFile(FJsonSerializableArrayFloat ImageArray, int32 InWidth, int32 InHeight, const FString& FilePath)
-{
-	float* TempArray = ImageArray.GetData();
-	TArray<FColor> InColors;
-	InColors.SetNumUninitialized(ImageArray.Num() / 3);
-
-	for (int32 i = 0; i < ImageArray.Num(); i += 3)
-	{
-		float test = TempArray[i];
-		uint8 Red = FMath::Clamp<uint8>(FMath::RoundToInt(TempArray[i+2] * 255.0f), 0, 255);
-		uint8 Green = FMath::Clamp<uint8>(FMath::RoundToInt(TempArray[i + 1] * 255.0f), 0, 255);
-		uint8 Blue = FMath::Clamp<uint8>(FMath::RoundToInt(TempArray[i] * 255.0f), 0, 255);
-		InColors[i / 3] = FColor(Red, Green, Blue, 255);
-	}
-	int fefwfe = 0;
-	// 픽셀 데이터를 PNG 형식으로 압축합니다.
-	TArray<uint8> PNGData;
-	PNGData.SetNumZeroed(InWidth*InHeight*3);
-	FImageUtils::ThumbnailCompressImageArray(InWidth, InHeight, InColors, PNGData); //////////여기서 뭔가 벌어진다앙ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ 
-
-	// PNG 데이터를 파일로 저장합니다.
-	if (FFileHelper::SaveArrayToFile(PNGData, *FilePath))
-	{
-		UE_LOG(LogTemp, Log, TEXT("PNG 파일을 저장했습니다: %s"), *FilePath);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("PNG 파일 저장 실패: %s"), *FilePath);
-	}
-
-}
-
-void FRealtimeStyleTransferViewExtension::SaveJsonSerializableArrayToPNGFile2(FJsonSerializableArrayFloat ImageArray, int32 InWidth, int32 InHeight, const FString& FilePath)
-{
-	float* TempArray = ImageArray.GetData();
-	TArray<FColor> InColors;
-	InColors.SetNumUninitialized(ImageArray.Num() / 3);
-
-	for (int32 i = 0; i < ImageArray.Num(); i += 3)
-	{
-		float test = TempArray[i];
-		uint8 Red = FMath::Clamp<uint8>(FMath::RoundToInt(TempArray[i + 2]), 0, 255);
-		uint8 Green = FMath::Clamp<uint8>(FMath::RoundToInt(TempArray[i + 1]), 0, 255);
-		uint8 Blue = FMath::Clamp<uint8>(FMath::RoundToInt(TempArray[i]), 0, 255);
-		InColors[i / 3] = FColor(Red, Green, Blue, 255);
-	}
-	int fefwfe = 0;
-	// 픽셀 데이터를 PNG 형식으로 압축합니다.
-	TArray<uint8> PNGData;
-	PNGData.SetNumZeroed(InWidth * InHeight * 3);
-	FImageUtils::ThumbnailCompressImageArray(InWidth, InHeight, InColors, PNGData); //////////여기서 뭔가 벌어진다앙ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ 
-
-	// PNG 데이터를 파일로 저장합니다.
-	if (FFileHelper::SaveArrayToFile(PNGData, *FilePath))
-	{
-		UE_LOG(LogTemp, Log, TEXT("PNG 파일을 저장했습니다: %s"), *FilePath);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("PNG 파일 저장 실패: %s"), *FilePath);
-	}
-
-}
 
 
 
